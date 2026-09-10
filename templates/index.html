@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Diabetes Risk Predictor</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+  <div class="container">
+
+    <header class="hero">
+      <h1>Diabetes Risk Predictor</h1>
+      <p class="tagline">
+        ML-powered screening trained on the Pima Indians Diabetes dataset
+      </p>
+    </header>
+
+    <div class="model-info">
+      <div class="model-info-item">
+        <span class="label">Model</span>
+        <span class="value">{{ model_name }}</span>
+      </div>
+      <div class="model-info-item">
+        <span class="label">Threshold</span>
+        <span class="value">{{ threshold }}</span>
+      </div>
+      <div class="model-info-item">
+        <span class="label">Test AUC</span>
+        <span class="value">{{ test_metrics.roc_auc }}</span>
+      </div>
+      <div class="model-info-item">
+        <span class="label">Test Recall</span>
+        <span class="value">{{ test_metrics.recall }}</span>
+      </div>
+    </div>
+
+    {% if result %}
+    <div class="result {% if result.flagged %}result-flag{% else %}result-clear{% endif %}">
+      <div class="result-verdict">{{ result.verdict }}</div>
+      <div class="result-details">
+        <div>
+          <span class="detail-label">Predicted probability of diabetes:</span>
+          <span class="detail-value">{{ result.probability_pct }}</span>
+        </div>
+        <div>
+          <span class="detail-label">Decision threshold:</span>
+          <span class="detail-value">{{ result.threshold_pct }}</span>
+        </div>
+        {% if result.imputed_fields %}
+        <div class="imputed-note">
+          Note: values missing for {{ result.imputed_fields|join(', ') }} —
+          filled in with training median by the model's imputer.
+        </div>
+        {% endif %}
+      </div>
+    </div>
+    {% endif %}
+
+    {% if error %}
+    <div class="error">{{ error }}</div>
+    {% endif %}
+
+    <form method="POST" class="predict-form">
+      <div class="form-grid">
+        {% for feat in feature_order %}
+        {% set meta = features[feat] %}
+        <div class="form-field">
+          <label for="{{ feat }}">{{ meta[0] }}</label>
+          <input
+            type="number"
+            id="{{ feat }}"
+            name="{{ feat }}"
+            placeholder="{{ meta[1] }}"
+            min="{{ meta[2] }}"
+            max="{{ meta[3] }}"
+            step="{{ meta[4] }}"
+            value="{{ submitted.get(feat, '') }}">
+        </div>
+        {% endfor %}
+      </div>
+
+      <p class="form-note">
+        Leave any field blank if unknown — the model's imputer will fill it
+        with the training median.
+      </p>
+
+      <button type="submit" class="btn-predict">Predict</button>
+    </form>
+
+    <footer class="footer">
+      <p><strong>Disclaimer:</strong> Portfolio project. Not medical advice.
+      Diabetes diagnosis requires a proper clinical blood test.</p>
+      <p>Source:
+        <a href="https://github.com/saksham20240/Deployed_Diabetes_prediction" target="_blank" rel="noopener">
+          github.com/saksham20240/Deployed_Diabetes_prediction
+        </a>
+      </p>
+    </footer>
+
+  </div>
+</body>
+</html>
