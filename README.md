@@ -363,41 +363,6 @@ Deployment:
 - systemd — process management
 - GitHub — source control
 
----
-
-## What I would do with more time
-
-Several things are on the "if I had another week" list:
-
-Probability calibration. Wrap the Random Forest in `CalibratedClassifierCV` with isotonic regression to fix the mid-probability miscalibration observed in the reliability curve. The Brier score would drop, and the probability values on the app would become interpretable as real risk numbers rather than as ranking scores. This is the single biggest realistic improvement.
-
-External validation. Test the model on a different diabetes dataset (for example, the Behavioral Risk Factor Surveillance System data from CDC, or the National Health and Nutrition Examination Survey) to see how much of the performance is specific to the Pima cohort. The Pima dataset was collected in the 1990s from a specific population, and model performance in modern general populations is not guaranteed.
-
-Feature engineering. Add two or three hand-picked interaction terms — Glucose times BMI is the obvious first candidate — and see whether logistic regression can close the F1 gap to Random Forest while remaining fully interpretable. The trade-off matters: LR's coefficients are directly explainable to a clinician, RF's feature importances are more abstract.
-
-HTTPS via Let's Encrypt. Get a free domain (a Duck DNS subdomain works) and issue a certificate with certbot. The `Not secure` banner in the browser is the only obvious cosmetic issue with the current deployment.
-
-Request logging with SQLite. Store every prediction alongside the input values, timestamp, and model version, so drift can be detected over time. This is a standard MLOps addition and doesn't cost much to implement.
-
-Hyperparameter search. A modest `RandomizedSearchCV` over Random Forest's `n_estimators`, `max_depth`, and `min_samples_leaf` might yield a small AUC gain. Returns are diminishing on a dataset this size but it's worth 2-3 hours of effort.
-
-Feature importance via permutation and SHAP. Gini importance is the default for tree models but can be biased toward high-cardinality features. Permutation importance is more reliable, and SHAP values give per-prediction attributions that a clinician could inspect on a case-by-case basis.
-
-None of these are blockers for the current version. They are the natural next steps if the project were to evolve from a portfolio demonstration into a real screening tool.
-
----
-
-## Honest limitations
-
-A few things I want to name explicitly rather than gloss over:
-
-- The dataset is 768 patients from a specific population and is over 25 years old. Any performance number reported here should be taken as applicable to that population and no other.
-- Test-set variance is real. On 154 rows and 54 positive cases, a five-patient shift in false negatives is well within noise. The 9-vs-11 gap between RF and ANN is meaningful only in that it's directionally consistent with what you'd expect on tabular data of this size.
-- The 0.867 AUC is competitive with published results on this dataset but is a ceiling, not a floor. Chasing 90% here almost always means leakage or overfitting to a specific split.
-- Random Forest's probabilities are not well-calibrated by default. The 0.45 decision threshold works because it was tuned on the model's actual output distribution — not because 0.45 corresponds to any specific clinical meaning.
-- This is a portfolio project, not a medical device. Diagnosing diabetes requires a proper clinical blood test (fasting plasma glucose, oral glucose tolerance test, or HbA1c) — not a machine learning model trained on 600 rows from the 1990s.
-
----
 
 ## References
 
@@ -406,17 +371,3 @@ Dataset:
 - Smith, J. W., Everhart, J. E., Dickson, W. C., Knowler, W. C., & Johannes, R. S. (1988). Using the ADAP learning algorithm to forecast the onset of diabetes mellitus. *Proceedings of the Annual Symposium on Computer Application in Medical Care*, 261-265.
 - Available via the UCI Machine Learning Repository.
 
-Key techniques:
-
-- Chawla, N. V., Bowyer, K. W., Hall, L. O., & Kegelmeyer, W. P. (2002). SMOTE: synthetic minority over-sampling technique. *Journal of Artificial Intelligence Research*, 16, 321-357.
-- Niculescu-Mizil, A., & Caruana, R. (2005). Predicting good probabilities with supervised learning. *ICML '05*.
-
-Libraries:
-
-- scikit-learn, imbalanced-learn, xgboost, tensorflow/keras, Flask, gunicorn, nginx.
-
----
-
-## Disclaimer
-
-This project was built for educational and portfolio purposes. The predictions produced by the deployed application are not medical advice and must not be used as a substitute for consultation with a licensed physician. Diabetes diagnosis requires clinical testing.
